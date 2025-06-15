@@ -1,9 +1,23 @@
-import { setupServer } from './server.js';
-import { initMongoConnection } from './db/initMongoConnection.js';
+import app from './server.js';
+import { connectDB } from './db/index.js';
 
-const bootstrap = async () => {
-  await initMongoConnection();
-  setupServer();
+const PORT = process.env.PORT || 3000;
+
+const start = async () => {
+  await connectDB();
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
 };
 
-bootstrap();
+start();
+
+// import { setupServer } from './server.js';
+// import { initMongoConnection } from './db/initMongoConnection.js';
+
+// const bootstrap = async () => {
+//   await initMongoConnection();
+//   setupServer();
+// };
+
+// bootstrap();
