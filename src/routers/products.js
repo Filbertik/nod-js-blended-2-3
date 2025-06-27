@@ -4,6 +4,12 @@ import { ctrlWrapper } from '../utils/ctrlWrapper.js';
 
 const router = express.Router();
 
+//  unit 3 6
+const authenticate = require('../middlewares/authenticate');
+
+router.use(authenticate);
+//  unit 3 6
+
 router.get('/', ctrlWrapper(productsController.getAllProducts));
 router.get('/:productId', ctrlWrapper(productsController.getProductById));
 router.post('/', ctrlWrapper(productsController.createProduct));

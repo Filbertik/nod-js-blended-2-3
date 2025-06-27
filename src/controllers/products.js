@@ -53,3 +53,39 @@ export const deleteProduct = async (req, res) => {
   }
   res.status(204).send();
 };
+
+// unit 3 2
+async function getAll(req, res, next) {
+  const { category, minPrice, maxPrice } = req.query;
+  const filter = { userId: req.user._id };
+  if (category) filter.category = category;
+  if (minPrice || maxPrice) filter.price = {};
+  if (minPrice) filter.price.$gte = parseFloat(minPrice);
+  if (maxPrice) filter.price.$lte = parseFloat(maxPrice);
+  const products = await Product.find(filter);
+  res.json({ status: 'success', data: products });
+}
+
+// const getProducts = async (req, res, next) => {
+//   try {
+//     const { category, minPrice, maxPrice } = req.query;
+//     const filter = { userId: req.user._id };
+//     if (category) filter.category = category;
+//     if (minPrice || maxPrice) {
+//       filter.price = {};
+//       if (minPrice) filter.price.$gte = +minPrice;
+//       if (maxPrice) filter.price.$lte = +maxPrice;
+//     }
+//     const products = await Product.find(filter);
+//     res.json({ status: 'success', data: products });
+//   } catch (err) {
+//     next(err);
+//   }
+// };
+
+// unit 3 5
+async function create(req, res, next) {
+  const data = { ...req.body, userId: req.user._id };
+  const product = await Product.create(data);
+  res.status(201).json({ status: 'success', data: product });
+}
