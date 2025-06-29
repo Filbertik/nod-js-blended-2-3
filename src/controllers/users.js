@@ -1,66 +1,42 @@
-// // unit 3 3
-// const { registerUser } = require('../services/users');
+import createHttpError from 'http-errors';
+import {
+  findUserByEmail,
+  createNewUser,
+  createSession,
+} from '../services/users.js';
+import bcrypt from 'bcrypt';
+import { setupCookies } from '../utils/setupCookies.js';
 
-// async function register(req, res, next) {
-//   try {
-//     const user = await registerUser(req.body);
-//     res.status(201).json({
-//       status: 'success',
-//       message: 'Successfully registered a user!',
-//       data: user,
-//     });
-//   } catch (err) {
-//     next(err);
-//   }
-// }
+export const registerUserController = async (req, res) => {
+  const user = await findUserByEmail(req.body.email);
+  if (user) throw createHttpError(409, 'Email in use');
+  const newUser = await createNewUser(req.body);
+  res.status(201).json({
+    status: 201,
+    message: 'Successfully registered a user!',
+    data: {
+      name: newUser.name,
+      email: newUser.email,
+    },
+  });
+};
 
-// unit 3 4
-const { loginUser } = require('../services/users');
+export const loginUserController = async (req, res) => {
+  const user = await findUserByEmail(req.body.email);
+  if (!user) throw createHttpError(401, 'User not found');
 
-async function login(req, res, next) {
-  try {
-    const { accessToken, refreshToken } = await loginUser(req.body);
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      expires: new Date(Date.now() + 30 * 24 * 3600000),
-    });
-    res.json({
-      status: 'success',
-      message: 'Successfully logged in an user!',
-      data: { accessToken },
-    });
-  } catch (err) {
-    next(err);
-  }
-}
+  const passwordValidate = bcrypt.compare(req.body.password, user.password);
 
-// unit3 7
-async function logout(req, res, next) {
-  try {
-    const { refreshToken } = req.cookies;
-    await logoutUser(refreshToken);
-    res.clearCookie('refreshToken');
-    res.status(204).end();
-  } catch (err) {
-    next(err);
-  }
-}
+  if (!passwordValidate) throw createHttpError(401, 'Wrong credentials');
 
-// unit 3 8
-async function refresh(req, res, next) {
-  try {
-    const { refreshToken: old } = req.cookies;
-    const { accessToken, refreshToken } = await refreshSession(old);
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      expires: new Date(Date.now() + 30 * 24 * 3600000),
-    });
-    res.json({
-      status: 'success',
-      message: 'Successfully refreshed a session!',
-      data: { accessToken },
-    });
-  } catch (err) {
-    next(err);
-  }
-}
+  const session = await createSession(user._id);
+  setupCookies(session.refreshToken, session._id, res);
+
+  res.json({
+    status: 200,
+    message: 'Successfully logged in an user!',
+    data: {
+      accessToken: session.accessToken,
+    },
+  });
+};

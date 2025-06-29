@@ -1,24 +1,34 @@
 import express from 'express';
 import cors from 'cors';
-import logger from 'morgan';
-import dotenv from 'dotenv';
-
+import usersRouter from './routers/usersRouter.js';
 import { env } from './utils/env.js';
-import productsRouter from './routers/products.js';
+import productRouter from './routers/productsRouter.js';
 import { errorHandler } from './middlewares/errorHandler.js';
-import { notFoundHandler } from './middlewares/notFoundHandler.js';
 
-dotenv.config();
+const PORT = Number(env('PORT', '3000'));
 
-const app = express();
+export const setupServer = () => {
+  const app = express();
 
-app.use(cors());
-app.use(logger('dev'));
-app.use(express.json());
+  app.use(express.json());
+  app.use(cors());
 
-app.use('/products', productsRouter);
+  app.use('/products', productRouter);
+  app.use('/users', usersRouter);
 
-app.use(notFoundHandler);
-app.use(errorHandler);
+  // between
+  // app.use('*', (req, res) => {
+  //   res.status(404).json({ message: 'Route not found!' });
+  // });
 
-export default app;
+  // state
+  app.use((req, res) => {
+    res.status(404).json({ message: 'Route not found!' });
+  });
+
+  app.use(errorHandler);
+
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+};
